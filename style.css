@@ -54,4 +54,17 @@ main {
     margin: auto;
     width: 550px;
     text-align: justify;
+    margin-bottom: 75px;
+}
+
+.centered .contact {
+    text-align: center;
+}
+
+.centered .me_hiking {
+    margin-top: 30px;
+}
+
+#breweries, #restaurants, #tea, #parks {
+    font-family: 'Crimson Text', serif;
 }
