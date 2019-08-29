@@ -1,0 +1,40 @@
+p {
+    color: white;
+    font-family: 'Noto Serif', serif;
+}
+
+.navbar {
+    display: inline-block;
+    text-align: left;
+    width: 100%;
+    list-style-type: none;
+    font-family: 'Trebuchet MS';
+    margin: 0;
+    padding: 0;
+    background-color: white;
+}
+
+.navbar li {
+    display: inline-block;
+    height: 40px;
+}
+
+.home {
+    font-size: 30px;
+    font-weight: 600;
+}
+
+.navbar li a {
+    padding: 15px;
+    display: block;
+    color: black;
+    font-weight: 600;
+}
+
+.navbar li a:hover, .navbar li a:active {
+    color: blue;
+}
+
+main {
+    padding-top: 10px;
+}
