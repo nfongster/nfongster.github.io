@@ -30,11 +30,6 @@ main a {
     height: 40px;
 }
 
-.home {
-    font-size: 30px;
-    font-weight: 600;
-}
-
 .navbar li a {
     padding: 15px;
     display: block;
@@ -42,8 +37,13 @@ main a {
     font-weight: 600;
 }
 
-.navbar li a:hover, .navbar li a:active {
+.navbar li a:hover {
     color: blue;
+}
+
+.home {
+    font-size: 30px;
+    font-weight: 600;
 }
 
 main {
