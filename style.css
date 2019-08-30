@@ -58,11 +58,12 @@ main {
 }
 
 .centered .contact {
+    font-family: 'Muli', sans-serif;
     text-align: center;
 }
 
-.centered .me_hiking {
-    margin-top: 30px;
+.centered .contact .email {
+    font-size: 15px;
 }
 
 #breweries, #restaurants, #tea, #parks {
