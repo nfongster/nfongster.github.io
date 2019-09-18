@@ -155,9 +155,6 @@
         After training, we can also plot our loss history for each network.  It’s not great, but as we’ll see, the networks do a good job for demonstrative purposes using a simple network:
     </p>
     <img src="loss.png" width=500px>
-
-    <h2>The Autoencoder</h2>
-    <img src="autoencoder.png" width=200px>
     <p>
         Technically I’ll be applying three different networks to my data (the autoencoder, the decoder, and the encoder), where the encoder and decoder share the corresponding parameters of the full autoencoder.  We’ll start by using the autoencoder to check the integrity of our data compression.  Let’s run the first 10 training samples through our full autoencoder and compare our results to the original images:
     </p>
@@ -178,7 +175,7 @@
     <p>
         I didn’t implement validation loss during training, but I did provide some qualitative proof that the network wasn’t overfitting.  Simply run the test data through the encoder, and plot the results:
     </p>
-    <img src="test_data.png">
+    <img src="test_data.png"  width=650px>
     <p>
         I’ve used the same colors corresponding to each number as above.  The black crosses mark locations of the test data in the compressed space.  For the 1’s (second plot), I’ve used white crosses instead so the data stands out better.  As you can see, the test data overlaps nicely with the corresponding training data, so we know that the network is generalizing well.
     </p>
@@ -188,7 +185,7 @@
     <p>
         Finally, let’s see how the data is being separated by running some 2-dimensional sample points through the decoder.  First, using the results of network 1, I’ve chosen 8 evenly-spaced points at a distance of 20 units from the origin, plotted below and numbered:
     </p>
-    <img src="decoder_sample_pts.png" width=500px>
+    <img src="decoder_sample_pts.png" width=300px>
     <p>
         If we apply the decoder to these points, we’ll get the following images:
     </p>
