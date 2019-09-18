@@ -19,7 +19,7 @@
 <main class="centered">
     <h1>Autoencoders in PyTorch</h1>
     <p>
-        An autoencoder is a type of neural network that can compress high-dimensional data into a low-dimensional embedding.  Some people on <a href="https://stats.stackexchange.com/questions/190148/building-an-autoencoder-in-tensorflow-to-surpass-pca">this thread</a> have constructed architectures using Tensorflow – I’ll be using their ideas and implementing them in PyTorch, with some added plots of my own that demonstrate the power of even a relatively simple network.  You can find all the code in this GitHub repository.
+        An autoencoder is a type of neural network that can compress high-dimensional data into a low-dimensional embedding.  Some people on <a href="https://stats.stackexchange.com/questions/190148/building-an-autoencoder-in-tensorflow-to-surpass-pca" target="_blank">this thread</a> have constructed architectures using Tensorflow – I’ll be using their ideas and implementing them in PyTorch, with some added plots of my own that demonstrate the power of even a relatively simple network.  You can find all the code in this GitHub repository.
     </p>
     <p>
         The architecture I’ll be using is a basic feed-forward network with five hidden layers, one of which is the “bottleneck” layer that represents the low-dimensional space into which our images will be projected.  The network is symmetric and looks like the following:
@@ -31,6 +31,7 @@
     <p>
         Let’s start writing some code.  PyTorch comes with several vanilla datasets that you can use to test your networks.  We’ll use the MNIST dataset, which is composed of 60,000 training examples and 10,000 test examples, each of which is 28 x 28 pixels.  Loading MNIST is not difficult, but it’s a good idea to normalize the data and convert it to a tensor, the data structure that PyTorch runs on:
     </p>
+    <pre>
     <code>
         def load_mnist():
             """Load and normalize the MNIST dataset."""
@@ -43,8 +44,10 @@
                                         download=True,
                                         transform=ToTensor())
         
-            print("Training Data: {} / Labels: {}".format(train_data.data.size(), train_data.targets.size()))
-            print("Test Data: {} / Labels: {}".format(test_data.data.size(), test_data.targets.size()))
+            print("Training Data: {} / Labels: {}".format(train_data.data.size(),
+                                                        train_data.targets.size()))
+            print("Test Data: {} / Labels: {}".format(test_data.data.size(),
+                                                        test_data.targets.size()))
             train_labels = train_data.targets
             train_data = torch.tensor(train_data.data, dtype=torch.float) / 255.
             test_labels = test_data.targets
@@ -61,9 +64,11 @@
                             shuffle=True,
                             num_workers=4)
     </code>
+    </pre>
     <p>
         In PyTorch, you can inherit from the Module class and overwrite the constructor and forward method to dictate what your network architecture is and how tensors propagate through it.  In the constructor for both the encoder and decoder, we’ll use 3 linear layers and apply elu activation functions as per the suggestions on the Stack Exchange thread above.  However, when calling the network, we’ll allow the constructor to take the desired dimensions of the hidden layers as input so we can train on multiple architectures.  Finally, our output will be a sigmoid function.  The sigmoid’s range is between 0 and 1, which is why data normalization is important.
     </p>
+    <pre>
     <code>
         class encoder(nn.Module):
 
@@ -96,51 +101,64 @@
                 x = torch.sigmoid(self.fcd3(x))
                 return x
     </code>
+    </pre>
     <p>
         Finally, we’ll choose some hyperparameters for our training session.  Our task isn’t a complicated one, so we’ll train on 50 epochs with a learning rate of 0.01.  We’ll use the Adam optimizer, the mean-squared error (MSE) as our loss function, and loop through 4 different network architectures.  Network 1 has 1024 neurons in the first hidden layer and 512 in the second; network 2 has 512 and 128; network 3 has 128 and 64; and network 4 has 64 and 32.  The input and output dimensions of all networks is the same (28 * 28 = 784), and the bottleneck has two neurons representing the 2-dimensional embedded space.
     </p>
+    <pre>
     <code>
         BATCH_SIZE = 100
         EPOCHS = 50
         LEARNING_RATE = 0.001
 
         def train(loader, optimizer, criterion, autoencoder):
-            """Trains the given autoencoder using the data in loader, with a specified optimizer
-                and loss criterion."""
+            """Trains the given autoencoder using the data in loader, with a
+            specified optimizer and loss criterion."""
             loss_history = np.zeros((1,))
             for epoch in range(EPOCHS):
                 for i, batch_images in enumerate(loader):
-                    # Dimensions of batch_images: torch.tensor(batch_size, 28, 28)
+                    # Dimensions of batch_images:
+                    #   torch.tensor(batch_size, 28, 28)
                     optimizer.zero_grad()                # Reset the gradient
-                    batch_images = torch.tensor(batch_images.view(BATCH_SIZE, 28 * 28),
-                                                dtype=torch.float) # Reshape the image dims
-                    out = autoencoder(batch_images)      # Obtain output from current network
-                    loss = criterion(out, batch_images)  # Compare output with original images to generate loss
-                    loss.backward()                      # Perform backpropagation to get gradient
-                    optimizer.step()                     # Apply gradient to update network parameters
+                    # Reshape the image dims
+                    batch_images = torch.tensor(batch_images.view(\
+                        BATCH_SIZE, 28 * 28), dtype=torch.float)
+                    # Obtain output from current network
+                    out = autoencoder(batch_images)
+                    # Compare output with original images to generate loss
+                    loss = criterion(out, batch_images)
+                    # Perform backpropagation to get gradient
+                    loss.backward()
+                    # Apply gradient to update network parameters
+                    optimizer.step()
 
                 loss_history = np.append(loss_history, loss.item())
-                print('epoch {}/{} \t Loss: {}'.format(epoch+1, EPOCHS, loss.item()))
+                print('epoch {}/{} \t Loss: {}'.format(epoch+1,
+                                                       EPOCHS, loss.item()))
             
             return autoencoder, loss_history, epoch
         
         hidden1 = [1024, 512, 128, 64]
         hidden2 = [512, 128, 64, 32]
         encoder_dim = 2
-        network_names = ['autoencoder1.pt', 'autoencoder2.pt', 'autoencoder3.pt', 'autoencoder4.pt']
+        network_names = ['autoencoder1.pt', 'autoencoder2.pt',
+                         'autoencoder3.pt', 'autoencoder4.pt']
         loss_histories = np.zeros((1, EPOCHS))
             
         for i in range(4):
-            # Set up the network.  Reference name != class name, so you can reset it each iteration
+            # Set up the network.  Reference name != class name, so you can
+            # reset it each iteration
             encoder_i = encoder(hidden1[i], hidden2[i], encoder_dim)
             decoder_i = decoder(hidden1[i], hidden2[i], encoder_dim)
             autoencoder_i = nn.Sequential(encoder_i, decoder_i)
             print('\nNetwork architecture:'), print(autoencoder_i)
             
             # Choose optimizer and loss criterion, and train network
-            optimizer = torch.optim.Adam(autoencoder_i.parameters(), lr=LEARNING_RATE)
+            optimizer = torch.optim.Adam(autoencoder_i.parameters(),
+                                         lr=LEARNING_RATE)
             criterion = nn.MSELoss()
-            autoencoder_i, loss_history, epoch = train(loader, optimizer, criterion, autoencoder_i)
+            autoencoder_i, loss_history, epoch = train(loader, optimizer,
+                                                    criterion, autoencoder_i)
             loss_histories = np.row_stack((loss_histories, loss_history[1:]))
         
             # Save network parameters
@@ -151,6 +169,7 @@
         
         loss_histories = loss_histories[1:, :]
     </code>
+    </pre>
     <p>
         After training, we can also plot our loss history for each network.  It’s not great, but as we’ll see, the networks do a good job for demonstrative purposes using a simple network:
     </p>
