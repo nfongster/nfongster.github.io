@@ -30,6 +30,11 @@ linkedin_username: nick-fong-8152b2b6
 linkedin_text: Nick Fong
 github_username: nfongster
 
+header_pages:
+  - projects.md
+  - blog.md
+  - about.md
+
 # Build settings
 theme: minima
 plugins:
