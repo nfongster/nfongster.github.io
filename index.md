@@ -3,14 +3,6 @@ layout: default
 title: Home
 ---
 
-## Contact Info
+I am a Seattle-based software engineer with nearly 4 years of professional, customer-facing experience developing C# applications for optical metrology projects.  Recently, I've been working with Go, Docker, and Postgres in my spare time.
 
-You can contact me via email at [your-email@example.com](mailto:your-email@example.com) or connect with me on social media:
-
-
-
-
-
-* **Email:** your-email@example.com
-* **LinkedIn:** [linkedin.com/in/your-profile](https://linkedin.com/in/your-profile)
-* **GitHub:** [github.com/your-profile](https://github.com/your-profile)
+I also have background experience working with Python and C++, both in industry and academic research settings.
