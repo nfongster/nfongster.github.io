@@ -32,7 +32,7 @@
           </span>
         </label>
 
-        <div class="trigger"><a class="page-link" href="/projects/">projects</a><a class="page-link" href="/blog/">blog</a><a class="page-link" href="/about/">about</a></div>
+        <div class="trigger"><a class="page-link" href="/projects/">projects</a><a class="page-link" href="/blog/">blog</a><a class="page-link" href="/contact/">contact</a></div>
       </nav></div>
 </header>
 <main class="page-content" aria-label="Content">
@@ -187,7 +187,7 @@
 
 <p>After training, we can also plot our loss history for each network. It hits the minimum pretty quickly and the final loss isn’t that small, but as we’ll see, the networks do a good job for demonstrative purposes using simple network architectures:</p>
 
-<p><img src="/assets/images/2019/2019-09-30-autoencoders-in-pytorch/loss_history.png" alt="Loss history" /></p>
+<div class="image-container">![Loss history](/assets/images/2019/2019-09-30-autoencoders-in-pytorch/loss_history.png)</div>
 
 <p>Technically I’ll be applying three different networks to my data (the autoencoder, the decoder, and the encoder), where the encoder and decoder share the corresponding learned parameters of the full autoencoder. We’ll start by using the autoencoder to check the integrity of our data compression. Let’s run the first 10 training samples through our trained autoencoder and compare our results to the original images:</p>
 
@@ -228,30 +228,6 @@
 <p>Although the MNIST autoencoder is a vanilla example and has been applied countless times before, I hope that this post has shed some light into what’s going on and how versatile the model is. One can experiment with alternative activation functions and deeper networks, especially if the image data set becomes more complicated.</p>
 
 <p>If you’re interested in picking up PyTorch, the website has some good tutorials that you can find <a href="https://docs.pytorch.org/tutorials/">here</a>. Have fun.</p>
-
-<!-- You’ll find this post in your `_posts` directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different ways, but the most common way is to run `jekyll serve`, which launches a web server and auto-regenerates your site when a file is updated.
-
-Jekyll requires blog post files to be named according to the following format:
-
-`YEAR-MONTH-DAY-title.MARKUP`
-
-Where `YEAR` is a four-digit number, `MONTH` and `DAY` are both two-digit numbers, and `MARKUP` is the file extension representing the format used in the file. After that, include the necessary front matter. Take a look at the source for this post to get an idea about how it works.
-
-Jekyll also offers powerful support for code snippets:
-
-
-<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="k">def</span> <span class="nf">print_hi</span><span class="p">(</span><span class="nb">name</span><span class="p">)</span>
-  <span class="nb">puts</span> <span class="s2">"Hi, </span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2">"</span>
-<span class="k">end</span>
-<span class="n">print_hi</span><span class="p">(</span><span class="s1">'Tom'</span><span class="p">)</span>
-<span class="c1">#=&gt; prints 'Hi, Tom' to STDOUT.</span></code></pre></figure>
-
-
-Check out the [Jekyll docs][jekyll-docs] for more info on how to get the most out of Jekyll. File all bugs/feature requests at [Jekyll’s GitHub repo][jekyll-gh]. If you have questions, you can ask them on [Jekyll Talk][jekyll-talk].
-
-[jekyll-docs]: https://jekyllrb.com/docs/home
-[jekyll-gh]:   https://github.com/jekyll/jekyll
-[jekyll-talk]: https://talk.jekyllrb.com/ -->
 
   </div><a class="u-url" href="/jekyll/update/2019/09/30/autoencoders-in-pytorch.html" hidden></a>
 </article>
