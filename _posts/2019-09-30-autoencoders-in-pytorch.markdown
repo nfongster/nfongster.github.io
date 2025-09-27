@@ -160,7 +160,7 @@ Technically I’ll be applying three different networks to my data (the autoenco
 The top row consists of the original images, and rows 2-5 contain the results of running these images through networks 1-4, respectively. Most of the numbers were compressed and de-compressed fairly accurately for all architectures, although the 5 was only represented well in the first network (the one with the most neurons). We haven’t even used any convolutional layers, and our data compression is already looking good given a sufficient number of nodes in the hidden layers. Obviously you’d want to use sophisticated approaches for more complex images, but at least our model is on the right track.
 
 ## The Encoder
-<img src="{{ page.assets_path }}/encoder.png" alt="Encoder" class="center-image">
+<img src="{{ page.assets_path }}/encoder.png" alt="Encoder" class="center-image-small">
 
 Since it looks like our inputs and outputs generally match, it’s reasonable to expect that the encoder has been sufficiently trained to perform dimensionality reduction. Let’s apply just the encoder to compress and plot our training data – you can find my approach in the repository code (and from here on out, we’ll use network 1):
 
@@ -177,7 +177,7 @@ I didn’t implement validation loss during training, but I did provide some qua
 I’ve used the same colors corresponding to each number as above. Greyed-out points represent the nine other digits. The black crosses mark locations of the test data in the compressed space. For the 1’s (second plot), I’ve used white crosses instead so the data stands out better. As you can see, the test data overlaps nicely with the corresponding training data, so we know that the network is generalizing well.
 
 ## The Decoder
-<img src="{{ page.assets_path }}/decoder.png" alt="Decoder" class="center-image">
+<img src="{{ page.assets_path }}/decoder.png" alt="Decoder" class="center-image-small">
 
 Finally, let’s see how the data is being separated by running some 2-dimensional sample points through the decoder. The idea is to choose some points that aren’t necessarily compressed representations of the original images; we want to see if the network is indeed producing a spectrum of meaningful features. First, using the results of network 1, I’ve chosen 8 evenly-spaced points at a distance of 20 units from the origin, plotted below and labeled:
 

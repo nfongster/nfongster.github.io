@@ -9,3 +9,8 @@
   margin-left: auto;
   margin-right: auto;
 }
+
+.center-image-small {
+  @extend .center-image;
+  max-width: 33%;
+}
