@@ -11,7 +11,7 @@ Put simply, an autoencoder is a particular type of feed-forward network that lea
 
 ![Autoencoder diagram]({{ page.assets_path }}/autoencoder.png)
 
-Where He1, He2, Hd1, and Hd2 are the first and second hidden layers of the encoder and decoder. The encoder and decoder are just the two halves of the autoencoder, and they do exactly what you’re thinking they do: encode the data into a low-dimensional space, and project that low-dimensional data back into the original space. The left set of layers through the bottleneck comprise the encoder, and the right set of layers starting at the bottleneck comprise the decoder. I’ll construct separate networks for the encoder and decoder and stitch them together using PyTorch’s sequential model, since we’ll be applying both portions of the network separately after training.
+Where $H_e1$, $H_e2$, $H_d1$, and $H_d2$ are the first and second hidden layers of the encoder and decoder. The encoder and decoder are just the two halves of the autoencoder, and they do exactly what you’re thinking they do: encode the data into a low-dimensional space, and project that low-dimensional data back into the original space. The left set of layers through the bottleneck comprise the encoder, and the right set of layers starting at the bottleneck comprise the decoder. I’ll construct separate networks for the encoder and decoder and stitch them together using PyTorch’s sequential model, since we’ll be applying both portions of the network separately after training.
 
 Let’s start writing some code. PyTorch comes with several vanilla datasets that you can use to test your networks. We’ll use the MNIST dataset, which is composed of 60,000 training examples and 10,000 test examples, each of which is a 28 x 28 pixel image. Loading MNIST is not difficult, but it’s a good idea to normalize the data and convert it to a tensor, the data structure that PyTorch runs on:
 
@@ -151,7 +151,7 @@ loss_histories = loss_histories[1:, :]
 
 After training, we can also plot our loss history for each network. It hits the minimum pretty quickly and the final loss isn’t that small, but as we’ll see, the networks do a good job for demonstrative purposes using simple network architectures:
 
-<div class="image-container">![Loss history]({{ page.assets_path }}/loss_history.png)</div>
+![Loss history]({{ page.assets_path }}/loss_history.png)
 
 Technically I’ll be applying three different networks to my data (the autoencoder, the decoder, and the encoder), where the encoder and decoder share the corresponding learned parameters of the full autoencoder. We’ll start by using the autoencoder to check the integrity of our data compression. Let’s run the first 10 training samples through our trained autoencoder and compare our results to the original images:
 
