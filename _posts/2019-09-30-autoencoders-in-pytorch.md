@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Autoencoders in PyTorch"
-date:   2019-09-30 14:00:43 -0700
+date:   2019-09-30
 categories: jekyll update
 assets_path: /assets/images/2019/2019-09-30-autoencoders-in-pytorch
 ---

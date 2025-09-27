@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2025-09-26T19:13:08-07:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Nick Fong</title><entry><title type="html">Autoencoders in PyTorch</title><link href="http://localhost:4000/jekyll/update/2019/09/30/autoencoders-in-pytorch.html" rel="alternate" type="text/html" title="Autoencoders in PyTorch" /><published>2019-09-30T14:00:43-07:00</published><updated>2019-09-30T14:00:43-07:00</updated><id>http://localhost:4000/jekyll/update/2019/09/30/autoencoders-in-pytorch</id><content type="html" xml:base="http://localhost:4000/jekyll/update/2019/09/30/autoencoders-in-pytorch.html"><![CDATA[<p>Autoencoders can compress high-dimensional data into a low-dimensional embedding. They’re also useful for coming up with a latent feature space for image data. I used it as a method for mining morphological features of axon and dendrite terminals for a project related to <a href="https://en.wikipedia.org/wiki/Neuronal_tracing">neuron tracing</a>. However, this post will just be a brief introduction to both autoencoders and PyTorch, and I’ll be using the MNIST dataset of handwritten digits for simplicity. Some people on <a href="https://stats.stackexchange.com/questions/190148/building-an-autoencoder-in-tensorflow-to-surpass-pca">this thread</a> have constructed architectures using Tensorflow – I’ll be using their ideas and implementing them in PyTorch, with some added plots of my own that demonstrate the power of even a relatively simple network. You can find all the code in this <a href="https://github.com/nfongster/autoencoders">Github repository</a>.</p>
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2025-09-26T19:23:34-07:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Nick Fong</title><entry><title type="html">Autoencoders in PyTorch</title><link href="http://localhost:4000/jekyll/update/2019/09/30/autoencoders-in-pytorch.html" rel="alternate" type="text/html" title="Autoencoders in PyTorch" /><published>2019-09-30T00:00:00-07:00</published><updated>2019-09-30T00:00:00-07:00</updated><id>http://localhost:4000/jekyll/update/2019/09/30/autoencoders-in-pytorch</id><content type="html" xml:base="http://localhost:4000/jekyll/update/2019/09/30/autoencoders-in-pytorch.html"><![CDATA[<p>Autoencoders can compress high-dimensional data into a low-dimensional embedding. They’re also useful for coming up with a latent feature space for image data. I used it as a method for mining morphological features of axon and dendrite terminals for a project related to <a href="https://en.wikipedia.org/wiki/Neuronal_tracing">neuron tracing</a>. However, this post will just be a brief introduction to both autoencoders and PyTorch, and I’ll be using the MNIST dataset of handwritten digits for simplicity. Some people on <a href="https://stats.stackexchange.com/questions/190148/building-an-autoencoder-in-tensorflow-to-surpass-pca">this thread</a> have constructed architectures using Tensorflow – I’ll be using their ideas and implementing them in PyTorch, with some added plots of my own that demonstrate the power of even a relatively simple network. You can find all the code in this <a href="https://github.com/nfongster/autoencoders">Github repository</a>.</p>
 
 <p>Put simply, an autoencoder is a particular type of feed-forward network that learns a mapping from the input back on to itself (I’m assuming you understand what feed-forward networks do). The architecture I’ll be using will have five hidden layers, one of which is the “bottleneck” layer that represents the low-dimensional space into which our images will be projected. The network is symmetric and looks like the following:</p>
 
@@ -178,4 +178,53 @@
 
 <p>Although the MNIST autoencoder is a vanilla example and has been applied countless times before, I hope that this post has shed some light into what’s going on and how versatile the model is. One can experiment with alternative activation functions and deeper networks, especially if the image data set becomes more complicated.</p>
 
-<p>If you’re interested in picking up PyTorch, the website has some good tutorials that you can find <a href="https://docs.pytorch.org/tutorials/">here</a>. Have fun.</p>]]></content><author><name></name></author><category term="jekyll" /><category term="update" /><summary type="html"><![CDATA[Autoencoders can compress high-dimensional data into a low-dimensional embedding. They’re also useful for coming up with a latent feature space for image data. I used it as a method for mining morphological features of axon and dendrite terminals for a project related to neuron tracing. However, this post will just be a brief introduction to both autoencoders and PyTorch, and I’ll be using the MNIST dataset of handwritten digits for simplicity. Some people on this thread have constructed architectures using Tensorflow – I’ll be using their ideas and implementing them in PyTorch, with some added plots of my own that demonstrate the power of even a relatively simple network. You can find all the code in this Github repository.]]></summary></entry></feed>
+<p>If you’re interested in picking up PyTorch, the website has some good tutorials that you can find <a href="https://docs.pytorch.org/tutorials/">here</a>. Have fun.</p>]]></content><author><name></name></author><category term="jekyll" /><category term="update" /><summary type="html"><![CDATA[Autoencoders can compress high-dimensional data into a low-dimensional embedding. They’re also useful for coming up with a latent feature space for image data. I used it as a method for mining morphological features of axon and dendrite terminals for a project related to neuron tracing. However, this post will just be a brief introduction to both autoencoders and PyTorch, and I’ll be using the MNIST dataset of handwritten digits for simplicity. Some people on this thread have constructed architectures using Tensorflow – I’ll be using their ideas and implementing them in PyTorch, with some added plots of my own that demonstrate the power of even a relatively simple network. You can find all the code in this Github repository.]]></summary></entry><entry><title type="html">Seattle</title><link href="http://localhost:4000/jekyll/update/2019/09/29/seattle.html" rel="alternate" type="text/html" title="Seattle" /><published>2019-09-29T00:00:00-07:00</published><updated>2019-09-29T00:00:00-07:00</updated><id>http://localhost:4000/jekyll/update/2019/09/29/seattle</id><content type="html" xml:base="http://localhost:4000/jekyll/update/2019/09/29/seattle.html"><![CDATA[<p><em>This is an old post from my original website.  Some of the locations may not be up to date, but I hope it provides some interesting info nonetheless.</em></p>
+
+<p>When time and money permit, I enjoy checking out local places in Seattle to grab a drink or a bite to eat. Here’s a compilation of some places I’ve frequented (most are in or within a 30 minute bus ride from the U District).</p>
+
+<h2 id="breweries">Breweries</h2>
+<p>Seattle is known for its local breweries. If you’re visiting and need ideas, here’s a list of some breweries I like, in no particular order:</p>
+
+<ul>
+  <li>Ravenna Brewing - located in a residential area and has excellent porters and a wide selection of IPAs and sours (if you’re into that sort of thing).</li>
+  <li>Fremont Brewing Co. - great outdoor seating with a family-friendly environment.</li>
+  <li>The Ram - actually a restaurant chain with on-site brewing, but it’s good. This is a link to the U Village one.</li>
+  <li>Burke Gilman Brewing Co. - just off the famous Burke Gilman trail, has a wide selection of all types of beers.</li>
+</ul>
+
+<h2 id="restaurants">Restaurants</h2>
+<p>There are also lots of good restaurants in Seattle. Here’s another list:</p>
+
+<ul>
+  <li>Schultzy’s - Personally my favorite place on the Ave. Lots of German lagers and ridiculously good food as well. A great spot for good drinks, good food, and good conversation with friends late at night.</li>
+  <li>Zeek’s Pizza - chain with many locations in and around Seattle. I have personally only been to the Ravenna site, but the pizza is some of the best I’ve had, and they have a good selection of drinks as well.</li>
+  <li>Eureka! - One of my all-time favorite restaurants in Seattle. Amazing all-American food and a very extensive list of beers and hard alcohol, mostly from various places along the west coast. A bit pricey, but worth it in my opinion. Also, it’s a chain, so there are other locations throughout the US as well; I’ve linked the U Village location.</li>
+  <li>Taste of India, Bengal Tiger - Really good Indian food.</li>
+  <li>Cedars - Indian and Mediterranean food. The servings are large, I almost always leave with leftovers!</li>
+  <li>Sebi’s Bistro - Great Polish food!</li>
+  <li>Cafe Turko - Great Turkish food/coffee/tea!</li>
+  <li>Hot Cakes - If you need a warm and tasty dessert, this is the place for you.</li>
+  <li>Pie Bar - If you need a warm dessert AND a drink, this is the place for you.</li>
+</ul>
+
+<h2 id="tea">Tea</h2>
+<p>I also really like tea. For some good options, I recommend these places:</p>
+
+<ul>
+  <li>Tea Republik - no link yet, but you can look it up on Google, it’s on the Ave.</li>
+  <li>Miro Tea</li>
+</ul>
+
+<h2 id="parks">Parks</h2>
+<p>Sometimes when I have a bit of extra time, I like to take a walk in or run through a park. Seattle has a lot of beautiful parks and other outdoorsie places to vist. Here are some I enjoy:</p>
+
+<ul>
+  <li>Golden Gardens</li>
+  <li>Alki Beach</li>
+  <li>Discovery Park</li>
+  <li>Green Lake</li>
+  <li>Gas Works</li>
+  <li>Washington Park Arboretum</li>
+  <li>Magnuson Park</li>
+  <li>Union Bay Natural Area</li>
+</ul>]]></content><author><name></name></author><category term="jekyll" /><category term="update" /><summary type="html"><![CDATA[This is an old post from my original website. Some of the locations may not be up to date, but I hope it provides some interesting info nonetheless.]]></summary></entry></feed>
