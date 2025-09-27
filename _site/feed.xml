@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2025-09-26T19:23:34-07:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Nick Fong</title><entry><title type="html">Autoencoders in PyTorch</title><link href="http://localhost:4000/jekyll/update/2019/09/30/autoencoders-in-pytorch.html" rel="alternate" type="text/html" title="Autoencoders in PyTorch" /><published>2019-09-30T00:00:00-07:00</published><updated>2019-09-30T00:00:00-07:00</updated><id>http://localhost:4000/jekyll/update/2019/09/30/autoencoders-in-pytorch</id><content type="html" xml:base="http://localhost:4000/jekyll/update/2019/09/30/autoencoders-in-pytorch.html"><![CDATA[<p>Autoencoders can compress high-dimensional data into a low-dimensional embedding. They’re also useful for coming up with a latent feature space for image data. I used it as a method for mining morphological features of axon and dendrite terminals for a project related to <a href="https://en.wikipedia.org/wiki/Neuronal_tracing">neuron tracing</a>. However, this post will just be a brief introduction to both autoencoders and PyTorch, and I’ll be using the MNIST dataset of handwritten digits for simplicity. Some people on <a href="https://stats.stackexchange.com/questions/190148/building-an-autoencoder-in-tensorflow-to-surpass-pca">this thread</a> have constructed architectures using Tensorflow – I’ll be using their ideas and implementing them in PyTorch, with some added plots of my own that demonstrate the power of even a relatively simple network. You can find all the code in this <a href="https://github.com/nfongster/autoencoders">Github repository</a>.</p>
+
+<p>Put simply, an autoencoder is a particular type of feed-forward network that learns a mapping from the input back on to itself (I’m assuming you understand what feed-forward networks do). The architecture I’ll be using will have five hidden layers, one of which is the “bottleneck” layer that represents the low-dimensional space into which our images will be projected. The network is symmetric and looks like the following:</p>
+
+<p><img src="/assets/images/2019/2019-09-30-autoencoders-in-pytorch/autoencoder.png" alt="Autoencoder diagram" class="center-image" /></p>
+
+<p>Where $H_e1$, $H_e2$, $H_d1$, and $H_d2$ are the first and second hidden layers of the encoder and decoder. The encoder and decoder are just the two halves of the autoencoder, and they do exactly what you’re thinking they do: encode the data into a low-dimensional space, and project that low-dimensional data back into the original space. The left set of layers through the bottleneck comprise the encoder, and the right set of layers starting at the bottleneck comprise the decoder. I’ll construct separate networks for the encoder and decoder and stitch them together using PyTorch’s sequential model, since we’ll be applying both portions of the network separately after training.</p>
+
+<p>Let’s start writing some code. PyTorch comes with several vanilla datasets that you can use to test your networks. We’ll use the MNIST dataset, which is composed of 60,000 training examples and 10,000 test examples, each of which is a 28 x 28 pixel image. Loading MNIST is not difficult, but it’s a good idea to normalize the data and convert it to a tensor, the data structure that PyTorch runs on:</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="k">def</span> <span class="nf">load_mnist</span><span class="p">():</span>
+    <span class="sh">"""</span><span class="s">Load and normalize the MNIST dataset.</span><span class="sh">"""</span>
+    <span class="n">train_data</span> <span class="o">=</span> <span class="n">datasets</span><span class="p">.</span><span class="nc">MNIST</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="sh">'</span><span class="s">./mnist/</span><span class="sh">'</span><span class="p">,</span>
+                                    <span class="n">train</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                    <span class="n">download</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                    <span class="n">transform</span><span class="o">=</span><span class="nc">ToTensor</span><span class="p">())</span>
+    <span class="n">test_data</span> <span class="o">=</span> <span class="n">datasets</span><span class="p">.</span><span class="nc">MNIST</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="sh">'</span><span class="s">./mnist/</span><span class="sh">'</span><span class="p">,</span>
+                                <span class="n">train</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                                <span class="n">download</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                <span class="n">transform</span><span class="o">=</span><span class="nc">ToTensor</span><span class="p">())</span>
+
+    <span class="nf">print</span><span class="p">(</span><span class="sh">"</span><span class="s">Training Data: {} / Labels: {}</span><span class="sh">"</span><span class="p">.</span><span class="nf">format</span><span class="p">(</span><span class="n">train_data</span><span class="p">.</span><span class="n">data</span><span class="p">.</span><span class="nf">size</span><span class="p">(),</span>
+                                                <span class="n">train_data</span><span class="p">.</span><span class="n">targets</span><span class="p">.</span><span class="nf">size</span><span class="p">()))</span>
+    <span class="nf">print</span><span class="p">(</span><span class="sh">"</span><span class="s">Test Data: {} / Labels: {}</span><span class="sh">"</span><span class="p">.</span><span class="nf">format</span><span class="p">(</span><span class="n">test_data</span><span class="p">.</span><span class="n">data</span><span class="p">.</span><span class="nf">size</span><span class="p">(),</span>
+                                                <span class="n">test_data</span><span class="p">.</span><span class="n">targets</span><span class="p">.</span><span class="nf">size</span><span class="p">()))</span>
+    <span class="n">train_labels</span> <span class="o">=</span> <span class="n">train_data</span><span class="p">.</span><span class="n">targets</span>
+    <span class="n">train_data</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">tensor</span><span class="p">(</span><span class="n">train_data</span><span class="p">.</span><span class="n">data</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="p">.</span><span class="nb">float</span><span class="p">)</span> <span class="o">/</span> <span class="mf">255.</span>
+    <span class="n">test_labels</span> <span class="o">=</span> <span class="n">test_data</span><span class="p">.</span><span class="n">targets</span>
+    <span class="n">test_data</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">tensor</span><span class="p">(</span><span class="n">test_data</span><span class="p">.</span><span class="n">data</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="p">.</span><span class="nb">float</span><span class="p">)</span> <span class="o">/</span> <span class="mf">255.</span>
+    
+    <span class="k">return</span> <span class="n">train_data</span><span class="p">,</span> <span class="n">train_labels</span><span class="p">,</span> <span class="n">test_data</span><span class="p">,</span> <span class="n">test_labels</span>
+
+<span class="c1"># Load the MNIST dataset, and normalize
+</span><span class="n">train_data</span><span class="p">,</span> <span class="n">train_labels</span><span class="p">,</span> <span class="n">test_data</span><span class="p">,</span> <span class="n">test_labels</span> <span class="o">=</span> <span class="nf">load_mnist</span><span class="p">()</span>
+
+<span class="c1"># For mini-batch processing.  Dimensions: (BATCH_SIZE, 28, 28)
+</span><span class="n">loader</span> <span class="o">=</span> <span class="nc">DataLoader</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">train_data</span><span class="p">,</span>
+                    <span class="n">batch_size</span><span class="o">=</span><span class="n">BATCH_SIZE</span><span class="p">,</span>
+                    <span class="n">shuffle</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                    <span class="n">num_workers</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span></code></pre></figure>
+
+<p>In PyTorch, you can inherit from the Module class and overwrite the constructor and the forward method to dictate what your network architecture is and how tensors propagate through it. In the constructor for both the encoder and decoder, we’ll use 3 linear layers and apply elu activation functions as per the suggestions on the Stack Exchange thread above. However, when calling the network, we’ll allow the constructor to take the desired dimensions of the hidden layers as input so we can train on multiple architectures. Finally, our output will be a sigmoid function. Since the sigmoid’s range is between 0 and 1, data normalization is important.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="k">class</span> <span class="nc">encoder</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="n">Module</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">hidden_dim1</span><span class="p">,</span> <span class="n">hidden_dim2</span><span class="p">,</span> <span class="n">encoded_dim</span><span class="p">):</span>
+        <span class="nf">super</span><span class="p">(</span><span class="n">encoder</span><span class="p">,</span> <span class="n">self</span><span class="p">).</span><span class="nf">__init__</span><span class="p">()</span>
+        <span class="c1"># fce = fully-connected encoder layer
+</span>        <span class="n">self</span><span class="p">.</span><span class="n">fce1</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">Linear</span><span class="p">(</span><span class="mi">28</span> <span class="o">*</span> <span class="mi">28</span><span class="p">,</span> <span class="n">hidden_dim1</span><span class="p">)</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">fce2</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">Linear</span><span class="p">(</span><span class="n">hidden_dim1</span><span class="p">,</span> <span class="n">hidden_dim2</span><span class="p">)</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">fce3</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">Linear</span><span class="p">(</span><span class="n">hidden_dim2</span><span class="p">,</span> <span class="n">encoded_dim</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">F</span><span class="p">.</span><span class="nf">elu</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="nf">fce1</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">F</span><span class="p">.</span><span class="nf">elu</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="nf">fce2</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="nf">fce3</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span>
+    
+
+<span class="k">class</span> <span class="nc">decoder</span><span class="p">(</span><span class="n">nn</span><span class="p">.</span><span class="n">Module</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">hidden_dim1</span><span class="p">,</span> <span class="n">hidden_dim2</span><span class="p">,</span> <span class="n">encoded_dim</span><span class="p">):</span>
+        <span class="nf">super</span><span class="p">(</span><span class="n">decoder</span><span class="p">,</span> <span class="n">self</span><span class="p">).</span><span class="nf">__init__</span><span class="p">()</span>
+        <span class="c1"># fcd = fully-connected decoder layer
+</span>        <span class="n">self</span><span class="p">.</span><span class="n">fcd1</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">Linear</span><span class="p">(</span><span class="n">encoded_dim</span><span class="p">,</span> <span class="n">hidden_dim2</span><span class="p">)</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">fcd2</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">Linear</span><span class="p">(</span><span class="n">hidden_dim2</span><span class="p">,</span> <span class="n">hidden_dim1</span><span class="p">)</span>
+        <span class="n">self</span><span class="p">.</span><span class="n">fcd3</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">Linear</span><span class="p">(</span><span class="n">hidden_dim1</span><span class="p">,</span> <span class="mi">28</span> <span class="o">*</span> <span class="mi">28</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">F</span><span class="p">.</span><span class="nf">elu</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="nf">fcd1</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">F</span><span class="p">.</span><span class="nf">elu</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="nf">fcd2</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">sigmoid</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="nf">fcd3</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">x</span></code></pre></figure>
+
+<p>Finally, we’ll choose some hyperparameters for our training session. Our task isn’t a complicated one, so we’ll train on 50 epochs (probably a lot more than is necessary) with a learning rate of 0.01. We’ll use the Adam optimizer, the mean-squared error (MSE) as our loss function, and loop through 4 different network architectures. Network 1 has 1024 neurons in the first hidden layer and 512 in the second (for both the encoder and decoder); network 2 has 512 and 128; network 3 has 128 and 64; and network 4 has 64 and 32. The input and output dimensions of all networks is the same (28 * 28 = 784), and the bottleneck has two neurons representing the 2-dimensional embedded space.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">BATCH_SIZE</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">EPOCHS</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="n">LEARNING_RATE</span> <span class="o">=</span> <span class="mf">0.001</span>
+
+<span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="n">loader</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">criterion</span><span class="p">,</span> <span class="n">autoencoder</span><span class="p">):</span>
+    <span class="sh">"""</span><span class="s">Trains the given autoencoder using the data in loader, with a
+    specified optimizer and loss criterion.</span><span class="sh">"""</span>
+    <span class="n">loss_history</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="nf">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,))</span>
+    <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="n">EPOCHS</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">batch_images</span> <span class="ow">in</span> <span class="nf">enumerate</span><span class="p">(</span><span class="n">loader</span><span class="p">):</span>
+            <span class="c1"># Dimensions of batch_images:
+</span>            <span class="c1">#   torch.tensor(batch_size, 28, 28)
+</span>            <span class="n">optimizer</span><span class="p">.</span><span class="nf">zero_grad</span><span class="p">()</span>                <span class="c1"># Reset the gradient
+</span>            <span class="c1"># Reshape the image dims
+</span>            <span class="n">batch_images</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nf">tensor</span><span class="p">(</span><span class="n">batch_images</span><span class="p">.</span><span class="nf">view</span><span class="p">(</span>\
+                <span class="n">BATCH_SIZE</span><span class="p">,</span> <span class="mi">28</span> <span class="o">*</span> <span class="mi">28</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="p">.</span><span class="nb">float</span><span class="p">)</span>
+            <span class="c1"># Obtain output from current network
+</span>            <span class="n">out</span> <span class="o">=</span> <span class="nf">autoencoder</span><span class="p">(</span><span class="n">batch_images</span><span class="p">)</span>
+            <span class="c1"># Compare output with original images to generate loss
+</span>            <span class="n">loss</span> <span class="o">=</span> <span class="nf">criterion</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">batch_images</span><span class="p">)</span>
+            <span class="c1"># Perform backpropagation to get gradient
+</span>            <span class="n">loss</span><span class="p">.</span><span class="nf">backward</span><span class="p">()</span>
+            <span class="c1"># Apply gradient to update network parameters
+</span>            <span class="n">optimizer</span><span class="p">.</span><span class="nf">step</span><span class="p">()</span>
+
+        <span class="n">loss_history</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="nf">append</span><span class="p">(</span><span class="n">loss_history</span><span class="p">,</span> <span class="n">loss</span><span class="p">.</span><span class="nf">item</span><span class="p">())</span>
+        <span class="nf">print</span><span class="p">(</span><span class="sh">'</span><span class="s">epoch {}/{} </span><span class="se">\t</span><span class="s"> Loss: {}</span><span class="sh">'</span><span class="p">.</span><span class="nf">format</span><span class="p">(</span><span class="n">epoch</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span>
+                                                <span class="n">EPOCHS</span><span class="p">,</span> <span class="n">loss</span><span class="p">.</span><span class="nf">item</span><span class="p">()))</span>
+    
+    <span class="k">return</span> <span class="n">autoencoder</span><span class="p">,</span> <span class="n">loss_history</span><span class="p">,</span> <span class="n">epoch</span>
+
+<span class="n">hidden1</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1024</span><span class="p">,</span> <span class="mi">512</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">64</span><span class="p">]</span>
+<span class="n">hidden2</span> <span class="o">=</span> <span class="p">[</span><span class="mi">512</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">32</span><span class="p">]</span>
+<span class="n">encoder_dim</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">network_names</span> <span class="o">=</span> <span class="p">[</span><span class="sh">'</span><span class="s">autoencoder1.pt</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">autoencoder2.pt</span><span class="sh">'</span><span class="p">,</span>
+                  <span class="sh">'</span><span class="s">autoencoder3.pt</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">autoencoder4.pt</span><span class="sh">'</span><span class="p">]</span>
+<span class="n">loss_histories</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="nf">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">EPOCHS</span><span class="p">))</span>
+    
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+    <span class="c1"># Set up the network.  Reference name != class name, so you can
+</span>    <span class="c1"># reset it each iteration
+</span>    <span class="n">encoder_i</span> <span class="o">=</span> <span class="nf">encoder</span><span class="p">(</span><span class="n">hidden1</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">hidden2</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">encoder_dim</span><span class="p">)</span>
+    <span class="n">decoder_i</span> <span class="o">=</span> <span class="nf">decoder</span><span class="p">(</span><span class="n">hidden1</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">hidden2</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">encoder_dim</span><span class="p">)</span>
+    <span class="n">autoencoder_i</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">Sequential</span><span class="p">(</span><span class="n">encoder_i</span><span class="p">,</span> <span class="n">decoder_i</span><span class="p">)</span>
+    <span class="nf">print</span><span class="p">(</span><span class="sh">'</span><span class="se">\n</span><span class="s">Network architecture:</span><span class="sh">'</span><span class="p">),</span> <span class="nf">print</span><span class="p">(</span><span class="n">autoencoder_i</span><span class="p">)</span>
+    
+    <span class="c1"># Choose optimizer and loss criterion, and train network
+</span>    <span class="n">optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">optim</span><span class="p">.</span><span class="nc">Adam</span><span class="p">(</span><span class="n">autoencoder_i</span><span class="p">.</span><span class="nf">parameters</span><span class="p">(),</span>
+                                  <span class="n">lr</span><span class="o">=</span><span class="n">LEARNING_RATE</span><span class="p">)</span>
+    <span class="n">criterion</span> <span class="o">=</span> <span class="n">nn</span><span class="p">.</span><span class="nc">MSELoss</span><span class="p">()</span>
+    <span class="n">autoencoder_i</span><span class="p">,</span> <span class="n">loss_history</span><span class="p">,</span> <span class="n">epoch</span> <span class="o">=</span> <span class="nf">train</span><span class="p">(</span><span class="n">loader</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span>
+                                            <span class="n">criterion</span><span class="p">,</span> <span class="n">autoencoder_i</span><span class="p">)</span>
+    <span class="n">loss_histories</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="nf">row_stack</span><span class="p">((</span><span class="n">loss_histories</span><span class="p">,</span> <span class="n">loss_history</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
+
+    <span class="c1"># Save network parameters
+</span>    <span class="n">torch</span><span class="p">.</span><span class="nf">save</span><span class="p">({</span><span class="sh">'</span><span class="s">epoch</span><span class="sh">'</span><span class="p">:</span> <span class="n">epoch</span><span class="p">,</span>
+                <span class="sh">'</span><span class="s">model_state_dict</span><span class="sh">'</span><span class="p">:</span> <span class="n">autoencoder_i</span><span class="p">.</span><span class="nf">state_dict</span><span class="p">(),</span>
+                <span class="sh">'</span><span class="s">optimizer_state_dict</span><span class="sh">'</span><span class="p">:</span> <span class="n">optimizer</span><span class="p">.</span><span class="nf">state_dict</span><span class="p">(),</span>
+                <span class="sh">'</span><span class="s">loss_history</span><span class="sh">'</span><span class="p">:</span> <span class="n">loss_history</span><span class="p">[</span><span class="mi">1</span><span class="p">:]},</span> <span class="n">network_names</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+<span class="n">loss_histories</span> <span class="o">=</span> <span class="n">loss_histories</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="p">:]</span></code></pre></figure>
+
+<p>After training, we can also plot our loss history for each network. It hits the minimum pretty quickly and the final loss isn’t that small, but as we’ll see, the networks do a good job for demonstrative purposes using simple network architectures:</p>
+
+<p><img src="/assets/images/2019/2019-09-30-autoencoders-in-pytorch/loss_history.png" alt="Loss history" class="center-image" /></p>
+
+<p>Technically I’ll be applying three different networks to my data (the autoencoder, the decoder, and the encoder), where the encoder and decoder share the corresponding learned parameters of the full autoencoder. We’ll start by using the autoencoder to check the integrity of our data compression. Let’s run the first 10 training samples through our trained autoencoder and compare our results to the original images:</p>
+
+<p><img src="/assets/images/2019/2019-09-30-autoencoders-in-pytorch/digits.png" alt="Digits" class="center-image" /></p>
+
+<p>The top row consists of the original images, and rows 2-5 contain the results of running these images through networks 1-4, respectively. Most of the numbers were compressed and de-compressed fairly accurately for all architectures, although the 5 was only represented well in the first network (the one with the most neurons). We haven’t even used any convolutional layers, and our data compression is already looking good given a sufficient number of nodes in the hidden layers. Obviously you’d want to use sophisticated approaches for more complex images, but at least our model is on the right track.</p>
+
+<h2 id="the-encoder">The Encoder</h2>
+<p><img src="/assets/images/2019/2019-09-30-autoencoders-in-pytorch/encoder.png" alt="Encoder" class="center-image-small" /></p>
+
+<p>Since it looks like our inputs and outputs generally match, it’s reasonable to expect that the encoder has been sufficiently trained to perform dimensionality reduction. Let’s apply just the encoder to compress and plot our training data – you can find my approach in the repository code (and from here on out, we’ll use network 1):</p>
+
+<p><img src="/assets/images/2019/2019-09-30-autoencoders-in-pytorch/2d_training_data.png" alt="2D training data" class="center-image" /></p>
+
+<p>Our data isn’t separated enough to apply a clustering algorithm, but as a sanity check, we have proof that the autoencoder is doing its job. With larger networks, the data separation gets a little better, so you can imagine the possibilities of using convolutional layers, more hidden layers, etc. to pick up additional features and thereby better cluster delineation. If the bottleneck has three layers, of course, you can plot 3-dimensional clusters as well:</p>
+
+<p><img src="/assets/images/2019/2019-09-30-autoencoders-in-pytorch/3d_training_data.png" alt="3D training data" class="center-image" /></p>
+
+<p>I didn’t implement validation loss during training, but I did provide some qualitative proof that the network wasn’t overfitting. If we run the test data through the encoder and plot the results, we’ll get the following:</p>
+
+<p><img src="/assets/images/2019/2019-09-30-autoencoders-in-pytorch/per_digit_data.png" alt="Per-digit data" class="center-image" /></p>
+
+<p>I’ve used the same colors corresponding to each number as above. Greyed-out points represent the nine other digits. The black crosses mark locations of the test data in the compressed space. For the 1’s (second plot), I’ve used white crosses instead so the data stands out better. As you can see, the test data overlaps nicely with the corresponding training data, so we know that the network is generalizing well.</p>
+
+<h2 id="the-decoder">The Decoder</h2>
+<p><img src="/assets/images/2019/2019-09-30-autoencoders-in-pytorch/decoder.png" alt="Decoder" class="center-image-small" /></p>
+
+<p>Finally, let’s see how the data is being separated by running some 2-dimensional sample points through the decoder. The idea is to choose some points that aren’t necessarily compressed representations of the original images; we want to see if the network is indeed producing a spectrum of meaningful features. First, using the results of network 1, I’ve chosen 8 evenly-spaced points at a distance of 20 units from the origin, plotted below and labeled:</p>
+
+<p><img src="/assets/images/2019/2019-09-30-autoencoders-in-pytorch/decoder_results.png" alt="Decoder results" class="center-image" /></p>
+
+<p>We’ll construct the decoder in a similar manner to the construction of the encoder. If we take these 8 points and run them through our decoder, we’ll get the following images:</p>
+
+<p><img src="/assets/images/2019/2019-09-30-autoencoders-in-pytorch/reconstructed_digits.png" alt="Reconstructed digits" class="center-image" /></p>
+
+<p>As one would expect, the points generally represent the digit clusters they fall into. For example, points 1 and 8 (safely in the 1-cluster) come out looking like the digit 1, while point 5 (safely in the 0-cluster) looks like the digit 0. Interestingly, point 7 looks like a cross between a 2 and an 8, combining features of both digits. This makes sense because the point falls right in between the 2- and 8-clusters. One general observation is that negative x-features are loops and positive x-features are lines. Negative y-features tend to lack stems (as characteristic of digits 5, 8, and 2, for example), while positive y-features have them (as characteristic of digits 7 and 9). It’s hard to say exactly what’s going on – deep learning leverages the sheer complexity of neural networks to come up with relevant features on its own, and that’s certainly the case in this example.</p>
+
+<p>Although the MNIST autoencoder is a vanilla example and has been applied countless times before, I hope that this post has shed some light into what’s going on and how versatile the model is. One can experiment with alternative activation functions and deeper networks, especially if the image data set becomes more complicated.</p>
+
+<p>If you’re interested in picking up PyTorch, the website has some good tutorials that you can find <a href="https://docs.pytorch.org/tutorials/">here</a>. Have fun.</p>]]></content><author><name></name></author><category term="jekyll" /><category term="update" /><summary type="html"><![CDATA[Autoencoders can compress high-dimensional data into a low-dimensional embedding. They’re also useful for coming up with a latent feature space for image data. I used it as a method for mining morphological features of axon and dendrite terminals for a project related to neuron tracing. However, this post will just be a brief introduction to both autoencoders and PyTorch, and I’ll be using the MNIST dataset of handwritten digits for simplicity. Some people on this thread have constructed architectures using Tensorflow – I’ll be using their ideas and implementing them in PyTorch, with some added plots of my own that demonstrate the power of even a relatively simple network. You can find all the code in this Github repository.]]></summary></entry><entry><title type="html">Seattle</title><link href="http://localhost:4000/jekyll/update/2019/09/29/seattle.html" rel="alternate" type="text/html" title="Seattle" /><published>2019-09-29T00:00:00-07:00</published><updated>2019-09-29T00:00:00-07:00</updated><id>http://localhost:4000/jekyll/update/2019/09/29/seattle</id><content type="html" xml:base="http://localhost:4000/jekyll/update/2019/09/29/seattle.html"><![CDATA[<p><em>This is an old post from my original website.  Some of the locations may not be up to date, but I hope it provides some interesting info nonetheless.</em></p>
+
+<p>When time and money permit, I enjoy checking out local places in Seattle to grab a drink or a bite to eat. Here’s a compilation of some places I’ve frequented (most are in or within a 30 minute bus ride from the U District).</p>
+
+<h2 id="breweries">Breweries</h2>
+<p>Seattle is known for its local breweries. If you’re visiting and need ideas, here’s a list of some breweries I like, in no particular order:</p>
+
+<ul>
+  <li>Ravenna Brewing - located in a residential area and has excellent porters and a wide selection of IPAs and sours (if you’re into that sort of thing).</li>
+  <li>Fremont Brewing Co. - great outdoor seating with a family-friendly environment.</li>
+  <li>The Ram - actually a restaurant chain with on-site brewing, but it’s good. This is a link to the U Village one.</li>
+  <li>Burke Gilman Brewing Co. - just off the famous Burke Gilman trail, has a wide selection of all types of beers.</li>
+</ul>
+
+<h2 id="restaurants">Restaurants</h2>
+<p>There are also lots of good restaurants in Seattle. Here’s another list:</p>
+
+<ul>
+  <li>Schultzy’s - Personally my favorite place on the Ave. Lots of German lagers and ridiculously good food as well. A great spot for good drinks, good food, and good conversation with friends late at night.</li>
+  <li>Zeek’s Pizza - chain with many locations in and around Seattle. I have personally only been to the Ravenna site, but the pizza is some of the best I’ve had, and they have a good selection of drinks as well.</li>
+  <li>Eureka! - One of my all-time favorite restaurants in Seattle. Amazing all-American food and a very extensive list of beers and hard alcohol, mostly from various places along the west coast. A bit pricey, but worth it in my opinion. Also, it’s a chain, so there are other locations throughout the US as well; I’ve linked the U Village location.</li>
+  <li>Taste of India, Bengal Tiger - Really good Indian food.</li>
+  <li>Cedars - Indian and Mediterranean food. The servings are large, I almost always leave with leftovers!</li>
+  <li>Sebi’s Bistro - Great Polish food!</li>
+  <li>Cafe Turko - Great Turkish food/coffee/tea!</li>
+  <li>Hot Cakes - If you need a warm and tasty dessert, this is the place for you.</li>
+  <li>Pie Bar - If you need a warm dessert AND a drink, this is the place for you.</li>
+</ul>
+
+<h2 id="tea">Tea</h2>
+<p>I also really like tea. For some good options, I recommend these places:</p>
+
+<ul>
+  <li>Tea Republik - no link yet, but you can look it up on Google, it’s on the Ave.</li>
+  <li>Miro Tea</li>
+</ul>
+
+<h2 id="parks">Parks</h2>
+<p>Sometimes when I have a bit of extra time, I like to take a walk in or run through a park. Seattle has a lot of beautiful parks and other outdoorsie places to vist. Here are some I enjoy:</p>
+
+<ul>
+  <li>Golden Gardens</li>
+  <li>Alki Beach</li>
+  <li>Discovery Park</li>
+  <li>Green Lake</li>
+  <li>Gas Works</li>
+  <li>Washington Park Arboretum</li>
+  <li>Magnuson Park</li>
+  <li>Union Bay Natural Area</li>
+</ul>]]></content><author><name></name></author><category term="jekyll" /><category term="update" /><summary type="html"><![CDATA[This is an old post from my original website. Some of the locations may not be up to date, but I hope it provides some interesting info nonetheless.]]></summary></entry></feed>
