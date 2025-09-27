@@ -646,4 +646,10 @@ table td {
   color: #099;
 }
 
+.center-image {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 /*# sourceMappingURL=main.css.map */

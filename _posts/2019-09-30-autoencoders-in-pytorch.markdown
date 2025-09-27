@@ -9,7 +9,7 @@ Autoencoders can compress high-dimensional data into a low-dimensional embedding
 
 Put simply, an autoencoder is a particular type of feed-forward network that learns a mapping from the input back on to itself (I’m assuming you understand what feed-forward networks do). The architecture I’ll be using will have five hidden layers, one of which is the “bottleneck” layer that represents the low-dimensional space into which our images will be projected. The network is symmetric and looks like the following:
 
-![Autoencoder diagram]({{ page.assets_path }}/autoencoder.png)
+<img src="{{ page.assets_path }}/autoencoder.png" alt="Autoencoder diagram" class="center-image">
 
 Where $H_e1$, $H_e2$, $H_d1$, and $H_d2$ are the first and second hidden layers of the encoder and decoder. The encoder and decoder are just the two halves of the autoencoder, and they do exactly what you’re thinking they do: encode the data into a low-dimensional space, and project that low-dimensional data back into the original space. The left set of layers through the bottleneck comprise the encoder, and the right set of layers starting at the bottleneck comprise the decoder. I’ll construct separate networks for the encoder and decoder and stitch them together using PyTorch’s sequential model, since we’ll be applying both portions of the network separately after training.
 
@@ -151,41 +151,41 @@ loss_histories = loss_histories[1:, :]
 
 After training, we can also plot our loss history for each network. It hits the minimum pretty quickly and the final loss isn’t that small, but as we’ll see, the networks do a good job for demonstrative purposes using simple network architectures:
 
-![Loss history]({{ page.assets_path }}/loss_history.png)
+<img src="{{ page.assets_path }}/loss_history.png" alt="Loss history" class="center-image">
 
 Technically I’ll be applying three different networks to my data (the autoencoder, the decoder, and the encoder), where the encoder and decoder share the corresponding learned parameters of the full autoencoder. We’ll start by using the autoencoder to check the integrity of our data compression. Let’s run the first 10 training samples through our trained autoencoder and compare our results to the original images:
 
-![Digits]({{ page.assets_path }}/digits.png)
+<img src="{{ page.assets_path }}/digits.png" alt="Digits" class="center-image">
 
 The top row consists of the original images, and rows 2-5 contain the results of running these images through networks 1-4, respectively. Most of the numbers were compressed and de-compressed fairly accurately for all architectures, although the 5 was only represented well in the first network (the one with the most neurons). We haven’t even used any convolutional layers, and our data compression is already looking good given a sufficient number of nodes in the hidden layers. Obviously you’d want to use sophisticated approaches for more complex images, but at least our model is on the right track.
 
 ## The Encoder
-![Encoder]({{ page.assets_path }}/encoder.png)
+<img src="{{ page.assets_path }}/encoder.png" alt="Encoder" class="center-image">
 
 Since it looks like our inputs and outputs generally match, it’s reasonable to expect that the encoder has been sufficiently trained to perform dimensionality reduction. Let’s apply just the encoder to compress and plot our training data – you can find my approach in the repository code (and from here on out, we’ll use network 1):
 
-![2D training data]({{ page.assets_path }}/2d_training_data.png)
+<img src="{{ page.assets_path }}/2d_training_data.png" alt="2D training data" class="center-image">
 
 Our data isn’t separated enough to apply a clustering algorithm, but as a sanity check, we have proof that the autoencoder is doing its job. With larger networks, the data separation gets a little better, so you can imagine the possibilities of using convolutional layers, more hidden layers, etc. to pick up additional features and thereby better cluster delineation. If the bottleneck has three layers, of course, you can plot 3-dimensional clusters as well:
 
-![2D training data]({{ page.assets_path }}/3d_training_data.png)
+<img src="{{ page.assets_path }}/3d_training_data.png" alt="3D training data" class="center-image">
 
 I didn’t implement validation loss during training, but I did provide some qualitative proof that the network wasn’t overfitting. If we run the test data through the encoder and plot the results, we’ll get the following:
 
-![Per-digit data]({{ page.assets_path }}/per_digit_data.png)
+<img src="{{ page.assets_path }}/per_digit_data.png" alt="Per-digit data" class="center-image">
 
 I’ve used the same colors corresponding to each number as above. Greyed-out points represent the nine other digits. The black crosses mark locations of the test data in the compressed space. For the 1’s (second plot), I’ve used white crosses instead so the data stands out better. As you can see, the test data overlaps nicely with the corresponding training data, so we know that the network is generalizing well.
 
 ## The Decoder
-![Decoder]({{ page.assets_path }}/decoder.png)
+<img src="{{ page.assets_path }}/decoder.png" alt="Decoder" class="center-image">
 
 Finally, let’s see how the data is being separated by running some 2-dimensional sample points through the decoder. The idea is to choose some points that aren’t necessarily compressed representations of the original images; we want to see if the network is indeed producing a spectrum of meaningful features. First, using the results of network 1, I’ve chosen 8 evenly-spaced points at a distance of 20 units from the origin, plotted below and labeled:
 
-![Decoder results]({{ page.assets_path }}/decoder_results.png)
+<img src="{{ page.assets_path }}/decoder_results.png" alt="Decoder results" class="center-image">
 
 We’ll construct the decoder in a similar manner to the construction of the encoder. If we take these 8 points and run them through our decoder, we’ll get the following images:
 
-![Reconstructed digits]({{ page.assets_path }}/reconstructed_digits.png)
+<img src="{{ page.assets_path }}/reconstructed_digits.png" alt="Reconstructed digits" class="center-image">
 
 As one would expect, the points generally represent the digit clusters they fall into. For example, points 1 and 8 (safely in the 1-cluster) come out looking like the digit 1, while point 5 (safely in the 0-cluster) looks like the digit 0. Interestingly, point 7 looks like a cross between a 2 and an 8, combining features of both digits. This makes sense because the point falls right in between the 2- and 8-clusters. One general observation is that negative x-features are loops and positive x-features are lines. Negative y-features tend to lack stems (as characteristic of digits 5, 8, and 2, for example), while positive y-features have them (as characteristic of digits 7 and 9). It’s hard to say exactly what’s going on – deep learning leverages the sheer complexity of neural networks to come up with relevant features on its own, and that’s certainly the case in this example.
 
