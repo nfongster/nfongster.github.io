@@ -1,0 +1,14 @@
+/* Targets navigation links in header */
+.site-nav a:hover,
+.site-nav a:focus {
+  text-decoration: none;
+  color: #06469a;
+}
+
+.site-nav a:hover,
+.site-nav a:focus,
+.site-title:hover,
+.site-title:focus {
+  text-decoration: none; /* Removes the underline on hover */
+  color: #06469a; /* Changes the link color to a shade of blue */
+}
